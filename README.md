@@ -11,4 +11,4 @@ Invoke the skill by saying *_wake word_ ask my list*
 Then you can say:
  - *What is on my list?* this will tell you what is on your list
  - *Add _something_* Will add _someting_ to the list
- - *Update list* then Alexa should ask you what you want to add. Answer with *_something*
+ - *Update list* then Alexa should ask you what you want to add. Answer with *_something_*
