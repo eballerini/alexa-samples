@@ -1,0 +1,101 @@
+{
+  "languageModel": {
+    "types": [
+      {
+        "name": "ItemType",
+        "values": [
+          {
+            "id": null,
+            "name": {
+              "value": "Buy groceries",
+              "synonyms": []
+            }
+          },
+          {
+            "id": null,
+            "name": {
+              "value": "Do laundry",
+              "synonyms": []
+            }
+          },
+          {
+            "id": null,
+            "name": {
+              "value": "Prepare dinner",
+              "synonyms": []
+            }
+          }
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "AddItemToMyTodoListIntent",
+        "samples": [
+          "Add {Item}",
+          "Update list"
+        ],
+        "slots": [
+          {
+            "name": "Item",
+            "type": "ItemType",
+            "samples": [
+              "Add {Item}"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "AMAZON.CancelIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.HelpIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.StopIntent",
+        "samples": []
+      },
+      {
+        "name": "WhatIsOnMyTodoListIntent",
+        "samples": [
+          "What is on my list"
+        ],
+        "slots": []
+      }
+    ],
+    "invocationName": "my list"
+  },
+  "prompts": [
+    {
+      "id": "Elicit.Intent-AddItemToMyTodoListIntent.IntentSlot-Item",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "What {Item} would you like to add?"
+        }
+      ]
+    }
+  ],
+  "dialog": {
+    "intents": [
+      {
+        "name": "AddItemToMyTodoListIntent",
+        "confirmationRequired": false,
+        "prompts": {},
+        "slots": [
+          {
+            "name": "Item",
+            "type": "ItemType",
+            "elicitationRequired": true,
+            "confirmationRequired": false,
+            "prompts": {
+              "elicitation": "Elicit.Intent-AddItemToMyTodoListIntent.IntentSlot-Item"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
