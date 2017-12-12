@@ -36,6 +36,26 @@ def build_elicit_slot():
           }
         ]
     }
+    
+def build_confirm_clear_list():
+    return {
+            "outputSpeech": {
+              "type": "PlainText",
+              "text": "Are you sure you want to clear your list?"
+            },
+            "shouldEndSession": False,
+            "directives": [
+              {
+                "type": "Dialog.ConfirmIntent",
+                "updatedIntent": {
+                  "name": "ClearMyListIntent",
+                  "confirmationStatus": "NONE",
+                  "slots": {
+                  }
+                }
+              }
+            ]
+        }
 
 def build_speechlet_response(title, output, reprompt_text, should_end_session):
     return {
@@ -86,7 +106,7 @@ def get_welcome_response():
 
 def handle_session_end_request():
     card_title = "Session Ended"
-    speech_output = "Thank you for trying the To Do list. " \
+    speech_output = "Thank you for using the To Do list. " \
                     "Have a nice day! "
     # Setting this to true ends the session and exits the skill.
     should_end_session = True
@@ -153,6 +173,26 @@ def get_todo_list_from_session(intent, session):
     # understood, the session will end.
     return build_response(session_attributes, build_speechlet_response(
         intent['name'], speech_output, reprompt_text, should_end_session))
+        
+def clear_list(intent, session):
+    confirmationStatus = intent.get('confirmationStatus')
+    todo_list = get_current_todo_list(session)
+    should_end_session = False
+    if confirmationStatus == "DENIED":
+        session_attributes = create_item_todo_list_attributes(todo_list)
+        card_title = "Ok, I am not clearing the list"
+        speech_output = "Ok, I am not clearing the list"
+        return build_response(session_attributes, build_speechlet_response(
+            card_title, speech_output, speech_output, should_end_session))
+    elif confirmationStatus == "CONFIRMED":
+        session_attributes = {}
+        card_title = "Ok, your list is cleared"
+        speech_output = "Ok, your list is cleared"
+        return build_response(session_attributes, build_speechlet_response(
+            card_title, speech_output, speech_output, should_end_session))
+    else:
+        current_attributes = create_item_todo_list_attributes(todo_list)
+        return build_response(current_attributes, build_confirm_clear_list())
 
 # --------------- Events ------------------
 
@@ -188,6 +228,8 @@ def on_intent(intent_request, session):
         return get_todo_list_from_session(intent, session)
     elif intent_name == "AddItemToMyTodoListIntent":
         return add_item_in_session(intent, session)
+    elif intent_name == "ClearMyListIntent":
+        return clear_list(intent, session)
     elif intent_name == "AMAZON.HelpIntent":
         return get_welcome_response()
     elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent":
