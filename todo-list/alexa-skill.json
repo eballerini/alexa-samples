@@ -58,6 +58,13 @@
         "samples": []
       },
       {
+        "name": "ClearMyListIntent",
+        "samples": [
+          "Clear the list"
+        ],
+        "slots": []
+      },
+      {
         "name": "WhatIsOnMyTodoListIntent",
         "samples": [
           "What is on my list"
@@ -74,6 +81,15 @@
         {
           "type": "PlainText",
           "value": "What {Item} would you like to add?"
+        }
+      ]
+    },
+    {
+      "id": "Confirm.Intent-ClearMyListIntent",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "Are you sure you want to clear the list?"
         }
       ]
     }
@@ -95,6 +111,14 @@
             }
           }
         ]
+      },
+      {
+        "name": "ClearMyListIntent",
+        "confirmationRequired": true,
+        "prompts": {
+          "confirmation": "Confirm.Intent-ClearMyListIntent"
+        },
+        "slots": []
       }
     ]
   }
