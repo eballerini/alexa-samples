@@ -1,125 +1,128 @@
 {
-  "languageModel": {
-    "types": [
-      {
-        "name": "ItemType",
-        "values": [
-          {
-            "id": null,
-            "name": {
-              "value": "Buy groceries",
-              "synonyms": []
+    "languageModel": {
+        "invocationName": "my custom list",
+        "intents": [
+            {
+                "name": "AddItemToMyTodoListIntent",
+                "slots": [
+                    {
+                        "name": "Item",
+                        "type": "ItemType",
+                        "samples": [
+                            "Add {Item}"
+                        ]
+                    }
+                ],
+                "samples": [
+                    "Add {Item}",
+                    "Update list"
+                ]
+            },
+            {
+                "name": "AMAZON.CancelIntent",
+                "slots": [],
+                "samples": []
+            },
+            {
+                "name": "AMAZON.HelpIntent",
+                "slots": [],
+                "samples": []
+            },
+            {
+                "name": "AMAZON.StopIntent",
+                "slots": [],
+                "samples": []
+            },
+            {
+                "name": "ClearMyListIntent",
+                "slots": [],
+                "samples": [
+                    "Clear the list"
+                ]
+            },
+            {
+                "name": "WhatIsOnMyTodoListIntent",
+                "slots": [],
+                "samples": [
+                    "What is on my list"
+                ]
             }
-          },
-          {
-            "id": null,
-            "name": {
-              "value": "Do laundry",
-              "synonyms": []
+        ],
+        "types": [
+            {
+                "name": "ItemType",
+                "values": [
+                    {
+                        "id": "",
+                        "name": {
+                            "value": "Buy groceries",
+                            "synonyms": []
+                        }
+                    },
+                    {
+                        "id": "",
+                        "name": {
+                            "value": "Do laundry",
+                            "synonyms": []
+                        }
+                    },
+                    {
+                        "id": "",
+                        "name": {
+                            "value": "Prepare dinner",
+                            "synonyms": []
+                        }
+                    }
+                ]
             }
-          },
-          {
-            "id": null,
-            "name": {
-              "value": "Prepare dinner",
-              "synonyms": []
-            }
-          }
         ]
-      }
-    ],
-    "intents": [
-      {
-        "name": "AddItemToMyTodoListIntent",
-        "samples": [
-          "Add {Item}",
-          "Update list"
-        ],
-        "slots": [
-          {
-            "name": "Item",
-            "type": "ItemType",
-            "samples": [
-              "Add {Item}"
-            ]
-          }
-        ]
-      },
-      {
-        "name": "AMAZON.CancelIntent",
-        "samples": []
-      },
-      {
-        "name": "AMAZON.HelpIntent",
-        "samples": []
-      },
-      {
-        "name": "AMAZON.StopIntent",
-        "samples": []
-      },
-      {
-        "name": "ClearMyListIntent",
-        "samples": [
-          "Clear the list"
-        ],
-        "slots": []
-      },
-      {
-        "name": "WhatIsOnMyTodoListIntent",
-        "samples": [
-          "What is on my list"
-        ],
-        "slots": []
-      }
-    ],
-    "invocationName": "my list"
-  },
-  "prompts": [
-    {
-      "id": "Elicit.Intent-AddItemToMyTodoListIntent.IntentSlot-Item",
-      "variations": [
-        {
-          "type": "PlainText",
-          "value": "What {Item} would you like to add?"
-        }
-      ]
     },
-    {
-      "id": "Confirm.Intent-ClearMyListIntent",
-      "variations": [
-        {
-          "type": "PlainText",
-          "value": "Are you sure you want to clear the list?"
-        }
-      ]
-    }
-  ],
-  "dialog": {
-    "intents": [
-      {
-        "name": "AddItemToMyTodoListIntent",
-        "confirmationRequired": false,
-        "prompts": {},
-        "slots": [
-          {
-            "name": "Item",
-            "type": "ItemType",
-            "elicitationRequired": true,
-            "confirmationRequired": false,
-            "prompts": {
-              "elicitation": "Elicit.Intent-AddItemToMyTodoListIntent.IntentSlot-Item"
+    "dialog": {
+        "intents": [
+            {
+                "name": "AddItemToMyTodoListIntent",
+                "confirmationRequired": false,
+                "prompts": {},
+                "slots": [
+                    {
+                        "name": "Item",
+                        "type": "ItemType",
+                        "confirmationRequired": false,
+                        "elicitationRequired": true,
+                        "prompts": {
+                            "elicitation": "Elicit.Intent-AddItemToMyTodoListIntent.IntentSlot-Item"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "ClearMyListIntent",
+                "confirmationRequired": true,
+                "prompts": {
+                    "confirmation": "Confirm.Intent-ClearMyListIntent"
+                },
+                "slots": []
             }
-          }
         ]
-      },
-      {
-        "name": "ClearMyListIntent",
-        "confirmationRequired": true,
-        "prompts": {
-          "confirmation": "Confirm.Intent-ClearMyListIntent"
+    },
+    "prompts": [
+        {
+            "id": "Elicit.Intent-AddItemToMyTodoListIntent.IntentSlot-Item",
+            "variations": [
+                {
+                    "type": "PlainText",
+                    "value": "What {Item} would you like to add?"
+                }
+            ]
         },
-        "slots": []
-      }
+        {
+            "id": "Confirm.Intent-ClearMyListIntent",
+            "variations": [
+                {
+                    "type": "PlainText",
+                    "value": "Are you sure you want to clear the list?"
+                }
+            ]
+        }
     ]
-  }
 }
