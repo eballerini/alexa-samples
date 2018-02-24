@@ -10,7 +10,7 @@ http://amzn.to/1LGWsLG
 from __future__ import print_function
 
 import os
-
+import urllib2
 
 # --------------- Helpers that build all of the responses ----------------------
 
@@ -160,13 +160,16 @@ def get_todo_list_from_service(intent, session):
     reprompt_text = None
     
     # matches DOMAIN env var in UI
-    domain = os.environ.get('DOMAIN')
+    domain = os.environ.get('DOMAIN', 'localhost:8000')
     print('domain: {}'.format(domain))
     
     # use session.user.accessToken
     # TODO:
     # call new endpoint wtih accessToken
     # parse return JSON to create list  
+    url = domain + '/todo/list?access_token=' + session['user']['accessToken']
+    request = urllib2.urlopen(url)
+    response = request.read()
     
 
     if session.get('attributes', {}) and "todoList" in session.get('attributes', {}):
