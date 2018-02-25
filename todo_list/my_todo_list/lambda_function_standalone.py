@@ -10,7 +10,6 @@ http://amzn.to/1LGWsLG
 from __future__ import print_function
 
 import os
-import urllib2
 
 # --------------- Helpers that build all of the responses ----------------------
 
@@ -155,40 +154,6 @@ def add_item_in_session(intent, session):
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
         
-def get_todo_list_from_service(intent, session):
-    session_attributes = {}
-    reprompt_text = None
-    
-    # matches DOMAIN env var in UI
-    domain = os.environ.get('DOMAIN', 'localhost:8000')
-    print('domain: {}'.format(domain))
-    
-    # use session.user.accessToken
-    # TODO:
-    # call new endpoint wtih accessToken
-    # parse return JSON to create list  
-    url = domain + '/todo/list?access_token=' + session['user']['accessToken']
-    request = urllib2.urlopen(url)
-    response = request.read()
-    
-
-    if session.get('attributes', {}) and "todoList" in session.get('attributes', {}):
-        todo_list = session['attributes']['todoList']
-        speech_output = 'On your list you have <break time="0.5s"/>'
-        for item in todo_list:
-            speech_output += item + '<break time="0.5s"/>'
-        session_attributes = create_item_todo_list_attributes(todo_list)
-    else:
-        speech_output = "Your to do list is empty."
-        
-    should_end_session = False
-
-    # Setting reprompt_text to None signifies that we do not want to reprompt
-    # the user. If the user does not respond or says something that is not
-    # understood, the session will end.
-    return build_response(session_attributes, build_speechlet_response(
-        intent['name'], speech_output, reprompt_text, should_end_session))
-        
 def get_todo_list_from_session(intent, session):
     session_attributes = {}
     reprompt_text = None
@@ -298,9 +263,12 @@ def lambda_handler(event, context):
     prevent someone else from configuring a skill that sends requests to this
     function.
     """
+    skill_id = os.environ.get('SKILL_ID')
     # if (event['session']['application']['applicationId'] !=
     #         "amzn1.echo-sdk-ams.app.[unique-value-here]"):
     #     raise ValueError("Invalid Application ID")
+    if event['session']['application']['applicationId'] != skill_id:
+        raise ValueError("Invalid Application ID")
 
     if event['session']['new']:
         on_session_started({'requestId': event['request']['requestId']},
