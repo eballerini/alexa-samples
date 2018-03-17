@@ -140,12 +140,10 @@ def add_item_from_service(intent, session):
 
     card_title = intent['name']
     session_attributes = {}
-    # shoud be True
     should_end_session = True
     
     if 'Item' in intent['slots']:
         item = intent['slots']['Item'].get('value')
-        # todo_list = get_current_todo_list(session)
         todo_list = []
         if item is None:
             return build_response(create_item_todo_list_attributes(todo_list), build_add_item_to_list())
@@ -157,23 +155,8 @@ def add_item_from_service(intent, session):
             # url = domain + '/todo/add_item?access_token=' + session.get('user', {}).get('accessToken')
             url = domain + '/todo/add_item'
             payload = {'access_token': session.get('user', {}).get('accessToken')}
-            
+        
             response_code = 0
-            
-            # context = ssl._create_unverified_context()
-            # try:
-            #     data = json.dumps({'description': str(item)})
-            #     req = urllib2.Request(url, data, {'Content-Type': 'application/json'})
-            #     # response = urllib2.urlopen(url, context=context)
-            #     response = urllib2.urlopen(req, context=context)
-            #     response_code = response.getcode()
-            #     # response = f.read()
-            #     # f.close()
-            #     
-            #     # response = urllib2.urlopen(url, context=context)
-            #     # response_code = response.getcode()
-            # except urllib2.HTTPError as e:
-            #     print(e)
             
             data = json.dumps({'description': str(item)})
             headers = {}
@@ -187,9 +170,6 @@ def add_item_from_service(intent, session):
                 print('cannot process the request')
                 return None
             
-            # current_attributes = session.get('attributes', {})
-            # todo_list.append(item)
-            # session_attributes = create_item_todo_list_attributes(todo_list)
             session_attributes = {}
             speech_output = 'I added to your list' \
             '<break time="0.5s"/>' + item
@@ -204,6 +184,7 @@ def add_item_from_service(intent, session):
         card_title, speech_output, reprompt_text, should_end_session))
         
 def _get_domain():
+    # matches DOMAIN env var in UI
     domain = os.environ.get('DOMAIN', 'http://localhost:8000')
     print('domain: {}'.format(domain))
     return domain
@@ -212,46 +193,26 @@ def get_todo_list_from_service(intent, session):
     session_attributes = {}
     reprompt_text = None
     
-    # matches DOMAIN env var in UI
-    domain = os.environ.get('DOMAIN', 'http://localhost:8000')
-    print('domain: {}'.format(domain))
+    domain = _get_domain()
     
     # parse return JSON to create list  
-    # url = domain + '/todo/list?access_token=' + session.get('user', {}).get('accessToken')
     url = domain + '/todo/list'
     payload = {'access_token': session.get('user', {}).get('accessToken')}
     # TODO improve error handling
     response_code = 0
     # this does not validate the SSL certificate. Don't do this in production!
-    # context = ssl._create_unverified_context()
-    # try:
-        # response = urllib2.urlopen(url, context=context)
-    # this does not validate the SSL certificate. Don't do this in production!
-    # response = requests.get(url, verify=False)
     response = requests.get(url, params=payload, verify=False)
     response_code = response.status_code
-    # print('response: ****')
-    # print(response.__dict__)
-    # response_code = response.getcode()
-    # except urllib2.HTTPError as e:
-    #     print(e)
-    
-    # print('response_code: {}'.format(response_code))
-    # print('response: {}'.format(response.__dict__))
     if response_code != 200:
         # TODO improve this
         print('cannot process the request. Response code is: {}'.format(response_code))
         return None
 
-    # data = response.read()
-    # data = json.load(response)
     data = response.json()
-    # print('data: {}'.format(data))
     
     items = data.get('items', [])
 
     if len(items) > 0:
-        # todo_list = session['attributes']['todoList']
         speech_output = 'On your list you have <break time="0.5s"/>'
         for item in items:
             speech_output += item.get('description') + '<break time="0.5s"/>'
@@ -262,7 +223,6 @@ def get_todo_list_from_service(intent, session):
         
     print('speech output: {}'.format(speech_output))
         
-    # should be True
     should_end_session = True
 
     # Setting reprompt_text to None signifies that we do not want to reprompt
@@ -273,8 +233,6 @@ def get_todo_list_from_service(intent, session):
         
 def clear_list_from_service(intent, session):
     confirmationStatus = intent.get('confirmationStatus')
-    print(f'confirmationStatus: {confirmationStatus}')
-    # todo_list = get_current_todo_list(session)
     todo_list = []
     should_end_session = True
     if confirmationStatus == "DENIED":
@@ -293,8 +251,6 @@ def clear_list_from_service(intent, session):
         response = requests.post(url, params=payload, headers=headers, verify=False)
         response_code = response.status_code
             
-        print('response_code: {}'.format(response_code))
-        print('response: {}'.format(response.__dict__))
         if response_code != 204:
             # TODO improve this
             print('cannot process the request')
