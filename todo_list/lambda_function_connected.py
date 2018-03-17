@@ -11,12 +11,18 @@ from __future__ import print_function
 
 import json
 import os
-import urllib2
 import ssl
+
+is_local = os.environ.get('ENV', 'local')
+if is_local == 'local':
+    import requests
+else:
+    from botocore.vendored import requests
+
 
 # --------------- Helpers that build all of the responses ----------------------
 
-def build_elicit_slot():
+def build_add_item_to_list():
     return {
         "outputSpeech": {
           "type": "PlainText",
@@ -126,25 +132,65 @@ def get_current_todo_list(session):
     else:
         todo_list = []
     return todo_list
-
-def add_item_in_session(intent, session):
+        
+def add_item_from_service(intent, session):
     """ Adds an item to the session and prepares the speech to reply to the
     user.
     """
 
     card_title = intent['name']
     session_attributes = {}
-    should_end_session = False
+    # shoud be True
+    should_end_session = True
     
     if 'Item' in intent['slots']:
         item = intent['slots']['Item'].get('value')
-        todo_list = get_current_todo_list(session)
+        # todo_list = get_current_todo_list(session)
+        todo_list = []
         if item is None:
-            return build_response(create_item_todo_list_attributes(todo_list), build_elicit_slot())
+            return build_response(create_item_todo_list_attributes(todo_list), build_add_item_to_list())
         else:
-            current_attributes = session.get('attributes', {})
-            todo_list.append(item)
-            session_attributes = create_item_todo_list_attributes(todo_list)
+            domain = os.environ.get('DOMAIN', 'http://localhost:8000')
+            print('domain: {}'.format(domain))
+            
+            # parse return JSON to create list  
+            # url = domain + '/todo/add_item?access_token=' + session.get('user', {}).get('accessToken')
+            url = domain + '/todo/add_item'
+            payload = {'access_token': session.get('user', {}).get('accessToken')}
+            
+            response_code = 0
+            
+            # context = ssl._create_unverified_context()
+            # try:
+            #     data = json.dumps({'description': str(item)})
+            #     req = urllib2.Request(url, data, {'Content-Type': 'application/json'})
+            #     # response = urllib2.urlopen(url, context=context)
+            #     response = urllib2.urlopen(req, context=context)
+            #     response_code = response.getcode()
+            #     # response = f.read()
+            #     # f.close()
+            #     
+            #     # response = urllib2.urlopen(url, context=context)
+            #     # response_code = response.getcode()
+            # except urllib2.HTTPError as e:
+            #     print(e)
+            
+            data = json.dumps({'description': str(item)})
+            headers = {}
+            response = requests.post(url, data=data, params=payload, headers=headers, verify=False)
+            response_code = response.status_code
+                
+            print('response_code: {}'.format(response_code))
+            print('response: {}'.format(response.__dict__))
+            if response_code != 204:
+                # TODO improve this
+                print('cannot process the request')
+                return None
+            
+            # current_attributes = session.get('attributes', {})
+            # todo_list.append(item)
+            # session_attributes = create_item_todo_list_attributes(todo_list)
+            session_attributes = {}
             speech_output = 'I added to your list' \
             '<break time="0.5s"/>' + item
             reprompt_text = "You can add more things to your to do list"
@@ -157,6 +203,11 @@ def add_item_in_session(intent, session):
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
         
+def _get_domain():
+    domain = os.environ.get('DOMAIN', 'http://localhost:8000')
+    print('domain: {}'.format(domain))
+    return domain
+        
 def get_todo_list_from_service(intent, session):
     session_attributes = {}
     reprompt_text = None
@@ -166,26 +217,36 @@ def get_todo_list_from_service(intent, session):
     print('domain: {}'.format(domain))
     
     # parse return JSON to create list  
-    url = domain + '/todo/list?access_token=' + session.get('user', {}).get('accessToken')
+    # url = domain + '/todo/list?access_token=' + session.get('user', {}).get('accessToken')
+    url = domain + '/todo/list'
+    payload = {'access_token': session.get('user', {}).get('accessToken')}
     # TODO improve error handling
     response_code = 0
     # this does not validate the SSL certificate. Don't do this in production!
-    context = ssl._create_unverified_context()
-    try:
-        response = urllib2.urlopen(url, context=context)
-        response_code = response.getcode()
-    except urllib2.HTTPError as e:
-        print(e)
+    # context = ssl._create_unverified_context()
+    # try:
+        # response = urllib2.urlopen(url, context=context)
+    # this does not validate the SSL certificate. Don't do this in production!
+    # response = requests.get(url, verify=False)
+    response = requests.get(url, params=payload, verify=False)
+    response_code = response.status_code
+    # print('response: ****')
+    # print(response.__dict__)
+    # response_code = response.getcode()
+    # except urllib2.HTTPError as e:
+    #     print(e)
     
-    print('response_code: {}'.format(response_code))
+    # print('response_code: {}'.format(response_code))
+    # print('response: {}'.format(response.__dict__))
     if response_code != 200:
         # TODO improve this
-        print('cannot process the request')
+        print('cannot process the request. Response code is: {}'.format(response_code))
         return None
 
     # data = response.read()
-    data = json.load(response)
-    print('data: {}'.format(data))
+    # data = json.load(response)
+    data = response.json()
+    # print('data: {}'.format(data))
     
     items = data.get('items', [])
 
@@ -201,7 +262,8 @@ def get_todo_list_from_service(intent, session):
         
     print('speech output: {}'.format(speech_output))
         
-    should_end_session = False
+    # should be True
+    should_end_session = True
 
     # Setting reprompt_text to None signifies that we do not want to reprompt
     # the user. If the user does not respond or says something that is not
@@ -209,22 +271,40 @@ def get_todo_list_from_service(intent, session):
     return build_response(session_attributes, build_speechlet_response(
         intent['name'], speech_output, reprompt_text, should_end_session))
         
-def clear_list(intent, session):
+def clear_list_from_service(intent, session):
     confirmationStatus = intent.get('confirmationStatus')
-    todo_list = get_current_todo_list(session)
-    should_end_session = False
+    print(f'confirmationStatus: {confirmationStatus}')
+    # todo_list = get_current_todo_list(session)
+    todo_list = []
+    should_end_session = True
     if confirmationStatus == "DENIED":
         session_attributes = create_item_todo_list_attributes(todo_list)
-        card_title = "Ok, I am not clearing the list"
         speech_output = "Ok, I am not clearing the list"
+        card_title = speech_output
         return build_response(session_attributes, build_speechlet_response(
             card_title, speech_output, speech_output, should_end_session))
     elif confirmationStatus == "CONFIRMED":
         session_attributes = {}
-        card_title = "Ok, your list is cleared"
+        domain = _get_domain()
+        url = domain + '/todo/clear_list'
+        payload = {'access_token': session.get('user', {}).get('accessToken')}
+        
+        headers = {}
+        response = requests.post(url, params=payload, headers=headers, verify=False)
+        response_code = response.status_code
+            
+        print('response_code: {}'.format(response_code))
+        print('response: {}'.format(response.__dict__))
+        if response_code != 204:
+            # TODO improve this
+            print('cannot process the request')
+            return None
+            
         speech_output = "Ok, your list is cleared"
+        card_title = intent['name']
         return build_response(session_attributes, build_speechlet_response(
             card_title, speech_output, speech_output, should_end_session))
+        
     else:
         current_attributes = create_item_todo_list_attributes(todo_list)
         return build_response(current_attributes, build_confirm_clear_list())
@@ -262,9 +342,9 @@ def on_intent(intent_request, session):
     if intent_name == "WhatIsOnMyTodoListIntent":
         return get_todo_list_from_service(intent, session)
     elif intent_name == "AddItemToMyTodoListIntent":
-        return add_item_in_session(intent, session)
+        return add_item_from_service(intent, session)
     elif intent_name == "ClearMyListIntent":
-        return clear_list(intent, session)
+        return clear_list_from_service(intent, session)
     elif intent_name == "AMAZON.HelpIntent":
         return get_welcome_response()
     elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent":
