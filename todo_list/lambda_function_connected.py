@@ -125,13 +125,6 @@ def handle_session_end_request():
 
 def create_item_todo_list_attributes(todo_list):
     return {"todoList": todo_list}
-    
-def get_current_todo_list(session):
-    if session.get('attributes', {}) and "todoList" in session.get('attributes', {}):
-        todo_list = session['attributes']['todoList']
-    else:
-        todo_list = []
-    return todo_list
         
 def add_item_from_service(intent, session):
     """ Adds an item to the session and prepares the speech to reply to the
