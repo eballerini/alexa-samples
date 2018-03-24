@@ -95,6 +95,17 @@ def build_response(session_attributes, speechlet_response):
         'response': speechlet_response
     }
 
+def _build_need_link_account():
+    return {
+           "outputSpeech": {
+             "type": "PlainText",
+             "text": "You must have my custom list account to use this skill. Please use the Alexa app to link your Amazon account with your my custom list Account."
+           },
+           "card": {
+             "type": "LinkAccount"
+           },
+           "shouldEndSession": True
+    }
 
 # --------------- Functions that control the skill's behavior ------------------
 def get_welcome_response():
@@ -125,6 +136,12 @@ def handle_session_end_request():
 
 def create_item_todo_list_attributes(todo_list):
     return {"todoList": todo_list}
+    
+def _get_domain():
+    # matches DOMAIN env var in UI
+    domain = os.environ.get('DOMAIN', 'http://localhost:8000')
+    print('domain: {}'.format(domain))
+    return domain
         
 def add_item_from_service(intent, session):
     """ Adds an item to the session and prepares the speech to reply to the
@@ -159,9 +176,8 @@ def add_item_from_service(intent, session):
             print('response_code: {}'.format(response_code))
             print('response: {}'.format(response.__dict__))
             if response_code != 204:
-                # TODO improve this
                 print('cannot process the request')
-                return None
+                return build_response({}, _build_need_link_account())
             
             session_attributes = {}
             speech_output = 'I added to your list' \
@@ -176,12 +192,6 @@ def add_item_from_service(intent, session):
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
         
-def _get_domain():
-    # matches DOMAIN env var in UI
-    domain = os.environ.get('DOMAIN', 'http://localhost:8000')
-    print('domain: {}'.format(domain))
-    return domain
-        
 def get_todo_list_from_service(intent, session):
     session_attributes = {}
     reprompt_text = None
@@ -191,15 +201,13 @@ def get_todo_list_from_service(intent, session):
     # parse return JSON to create list  
     url = domain + '/todo/list'
     payload = {'access_token': session.get('user', {}).get('accessToken')}
-    # TODO improve error handling
     response_code = 0
     # this does not validate the SSL certificate. Don't do this in production!
     response = requests.get(url, params=payload, verify=False)
     response_code = response.status_code
     if response_code != 200:
-        # TODO improve this
         print('cannot process the request. Response code is: {}'.format(response_code))
-        return None
+        return build_response({}, _build_need_link_account())
 
     data = response.json()
     
@@ -245,9 +253,8 @@ def clear_list_from_service(intent, session):
         response_code = response.status_code
             
         if response_code != 204:
-            # TODO improve this
             print('cannot process the request')
-            return None
+            return build_response({}, _build_need_link_account())
             
         speech_output = "Ok, your list is cleared"
         card_title = intent['name']
